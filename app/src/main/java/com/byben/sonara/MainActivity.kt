@@ -27,6 +27,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.byben.sonara.ui.screens.LibraryScreen
 import com.byben.sonara.ui.screens.PlayerScreen
+import com.byben.sonara.ui.screens.SettingsScreen
 import com.byben.sonara.ui.theme.*
 import com.byben.sonara.viewmodel.PlayerViewModel
 
@@ -91,9 +92,11 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                 onShuffle = viewModel::toggleShuffle,
                 onRepeat = viewModel::toggleRepeat,
                 onFavorite = viewModel::toggleFavorite,
+                onSettingsClick = { selectedTab = 2 },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
+                    .systemBarsPadding()
             )
             1 -> LibraryScreen(
                 state = state,
@@ -104,6 +107,13 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
+                    .systemBarsPadding()
+            )
+            2 -> SettingsScreen(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .systemBarsPadding()
             )
         }
     }
@@ -151,6 +161,25 @@ fun BottomNavBar(
                 )
             },
             label = { Text("Library", fontSize = 11.sp) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = PurpleAccent,
+                selectedTextColor = PurpleAccent,
+                unselectedIconColor = OnSurfaceMuted,
+                unselectedTextColor = OnSurfaceMuted,
+                indicatorColor = PurpleMid
+            )
+        )
+        NavigationBarItem(
+            selected = selectedTab == 2,
+            onClick = { onTabSelected(2) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            label = { Text("Settings", fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = PurpleAccent,
                 selectedTextColor = PurpleAccent,

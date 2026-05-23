@@ -3,6 +3,7 @@ package com.byben.sonara.ui.screens
 import android.net.Uri
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -45,11 +46,13 @@ fun PlayerScreen(
     onShuffle: () -> Unit,
     onRepeat: () -> Unit,
     onFavorite: (Song) -> Unit,
+    onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .fillMaxSize()
+            .systemBarsPadding()
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
@@ -66,13 +69,14 @@ fun PlayerScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 28.dp),
+                .padding(horizontal = 28.dp)
+                .statusBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(52.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Top bar
-            TopBar()
+            TopBar(onSettingsClick = onSettingsClick)
 
             Spacer(modifier = Modifier.height(36.dp))
 
@@ -152,9 +156,15 @@ private fun GlowBackground() {
 }
 
 @Composable
-private fun TopBar() {
+private fun TopBar(onSettingsClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = SurfaceCard.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(24.dp)
+            )
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -172,10 +182,12 @@ private fun TopBar() {
             )
         )
         Icon(
-            imageVector = Icons.Default.MoreVert,
-            contentDescription = "More options",
+            imageVector = Icons.Default.Settings,
+            contentDescription = "Settings",
             tint = IconTint,
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier
+                .size(28.dp)
+                .clickable(onClick = onSettingsClick)
         )
     }
 }
