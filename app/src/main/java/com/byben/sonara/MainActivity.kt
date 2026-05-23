@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.LibraryMusic
@@ -24,7 +25,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.byben.sonara.data.model.Song
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.byben.sonara.ui.screens.LibraryScreen
 import com.byben.sonara.ui.screens.PlayerScreen
 import com.byben.sonara.ui.theme.SonaraTheme
@@ -85,32 +85,35 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                     .fillMaxSize()
                     .padding(innerPadding)
             )
-            1 -> Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                LibraryScreen(
-                    state = state,
-                    onSongClick = { song, index ->
-                        viewModel.playSong(song, index)
-                        selectedTab = 0
-                    },
-                    onMiniPlayerClick = { selectedTab = 0 },
-                    bottomPadding = if (state.currentSong != null) 112.dp else 16.dp,
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                if (state.currentSong != null) {
-                    MiniPlayerOverlay(
-                        song = state.currentSong,
-                        isPlaying = state.isPlaying,
-                        onPlayPause = viewModel::togglePlayPause,
-                        onOpenPlayer = { selectedTab = 0 },
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
+            1 -> {
+                val currentSong = state.currentSong
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    LibraryScreen(
+                        state = state,
+                        onSongClick = { song, index ->
+                            viewModel.playSong(song, index)
+                            selectedTab = 0
+                        },
+                        onMiniPlayerClick = { selectedTab = 0 },
+                        bottomPadding = if (currentSong != null) 112.dp else 16.dp,
+                        modifier = Modifier.fillMaxSize()
                     )
+
+                    if (currentSong != null) {
+                        MiniPlayerOverlay(
+                            song = currentSong,
+                            isPlaying = state.isPlaying,
+                            onPlayPause = viewModel::togglePlayPause,
+                            onOpenPlayer = { selectedTab = 0 },
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
                 }
             }
         }

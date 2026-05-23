@@ -74,7 +74,12 @@ fun LibraryScreen(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(16.dp, bottom = bottomPadding),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
+                    bottom = bottomPadding
+                ),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 itemsIndexed(state.songs) { index, song ->
