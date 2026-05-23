@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.byben.sonara.data.model.Song
@@ -28,6 +29,8 @@ import com.byben.sonara.viewmodel.PlayerState
 fun LibraryScreen(
     state: PlayerState,
     onSongClick: (Song, Int) -> Unit,
+    onMiniPlayerClick: () -> Unit = {},
+    bottomPadding: Dp = 16.dp,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -71,7 +74,7 @@ fun LibraryScreen(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(16.dp, bottom = bottomPadding),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 itemsIndexed(state.songs) { index, song ->

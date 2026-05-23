@@ -8,16 +8,22 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.core.view.WindowCompat
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.byben.sonara.data.model.Song
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.byben.sonara.ui.screens.LibraryScreen
 import com.byben.sonara.ui.screens.PlayerScreen
@@ -62,7 +68,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SonaraApp(viewModel: PlayerViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableStateOf(1) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -79,16 +85,83 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                     .fillMaxSize()
                     .padding(innerPadding)
             )
-            1 -> LibraryScreen(
-                state = state,
-                onSongClick = { song, index ->
-                    viewModel.playSong(song, index)
-                    selectedTab = 0
-                },
+            1 -> Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-            )
+            ) {
+                LibraryScreen(
+                    state = state,
+                    onSongClick = { song, index ->
+                        viewModel.playSong(song, index)
+                        selectedTab = 0
+                    },
+                    onMiniPlayerClick = { selectedTab = 0 },
+                    bottomPadding = if (state.currentSong != null) 112.dp else 16.dp,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                if (state.currentSong != null) {
+                    MiniPlayerOverlay(
+                        song = state.currentSong,
+                        isPlaying = state.isPlaying,
+                        onPlayPause = viewModel::togglePlayPause,
+                        onOpenPlayer = { selectedTab = 0 },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MiniPlayerOverlay(
+    song: Song,
+    isPlaying: Boolean,
+    onPlayPause: () -> Unit,
+    onOpenPlayer: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 84.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onOpenPlayer)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = song.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = song.artist,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
+            IconButton(onClick = onPlayPause) {
+                Icon(
+                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (isPlaying) "Pause" else "Play"
+                )
+            }
         }
     }
 }

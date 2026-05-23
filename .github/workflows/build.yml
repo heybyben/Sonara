@@ -57,11 +57,25 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Upload debug APK artifact
+      - name: Create debug ZIP artifact
+        run: |
+          set -euo pipefail
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          ZIP_NAME="sonara-debug-${GITHUB_RUN_NUMBER}.zip"
+          if [ ! -f "$APK_PATH" ]; then
+            echo "No debug APK found at $APK_PATH"
+            exit 1
+          fi
+          zip -j "$ZIP_NAME" "$APK_PATH"
+          ls -l "$ZIP_NAME"
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+
+      - name: Upload debug ZIP artifact
         uses: actions/upload-artifact@v4
         with:
           name: Sonara-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: sonara-debug-${{ github.run_number }}.zip
           compression-level: 0
           if-no-files-found: error
 
