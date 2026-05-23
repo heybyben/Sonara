@@ -40,7 +40,10 @@ fun LibraryScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(PurpleDark, SurfaceDark)
+                    colors = listOf(
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surface
+                    )
                 )
             )
     ) {
@@ -55,13 +58,13 @@ fun LibraryScreen(
                     Text(
                         text = "Your Library",
                         style = MaterialTheme.typography.displayLarge,
-                        color = OnSurface
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "${state.songs.size} songs",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = OnSurfaceMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 // App logo
@@ -72,7 +75,7 @@ fun LibraryScreen(
                         .clip(CircleShape)
                         .background(
                             Brush.radialGradient(
-                                colors = listOf(PurpleAccent, PinkAccent)
+                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                             )
                         ),
                     contentAlignment = Alignment.Center
@@ -119,7 +122,7 @@ fun SongItem(
     isCurrent: Boolean,
     onClick: () -> Unit
 ) {
-    val bgColor = if (isCurrent) SurfaceCard else Color.Transparent
+    val bgColor = if (isCurrent) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent
 
     Row(
         modifier = Modifier
@@ -135,7 +138,7 @@ fun SongItem(
             modifier = Modifier
                 .size(52.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(PurpleMid),
+                .background(MaterialTheme.colorScheme.secondaryContainer),
             contentAlignment = Alignment.Center
         ) {
             if (song.albumArtUri != null) {
@@ -149,7 +152,7 @@ fun SongItem(
                 Icon(
                     imageVector = Icons.Default.MusicNote,
                     contentDescription = null,
-                    tint = PurpleAccent,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(26.dp)
                 )
             }
@@ -174,7 +177,7 @@ fun SongItem(
                 text = song.title,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontSize = 15.sp,
-                    color = if (isCurrent) PurpleLight else OnSurface
+                    color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -183,7 +186,7 @@ fun SongItem(
             Text(
                 text = "${song.artist} • ${song.album}",
                 style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceMuted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -194,7 +197,7 @@ fun SongItem(
         Text(
             text = song.duration.toFormattedTime(),
             style = MaterialTheme.typography.bodySmall,
-            color = OnSurfaceMuted
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -226,7 +229,7 @@ fun PlayingBarsIndicator() {
                     .width(3.dp)
                     .fillMaxHeight(fraction)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(PurpleAccent)
+                    .background(MaterialTheme.colorScheme.primary)
             )
         }
     }
@@ -242,20 +245,20 @@ fun EmptyLibrary() {
             Icon(
                 imageVector = Icons.Default.LibraryMusic,
                 contentDescription = null,
-                tint = PurpleMid,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(80.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "No music found",
                 style = MaterialTheme.typography.headlineMedium,
-                color = OnSurfaceMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Add some songs to your device\nto get started",
                 style = MaterialTheme.typography.bodyMedium,
-                color = OnSurfaceMuted.copy(alpha = 0.6f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }

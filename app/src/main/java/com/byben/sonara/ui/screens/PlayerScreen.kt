@@ -56,9 +56,9 @@ fun PlayerScreen(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        PurpleDeep,
-                        PurpleDark,
-                        SurfaceDark
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        MaterialTheme.colorScheme.surface
                     )
                 )
             )
@@ -135,7 +135,7 @@ fun PlayerScreen(
 @Composable
 private fun GlowBackground() {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Top left purple glow
+        // Top left glow
         Box(
             modifier = Modifier
                 .size(280.dp)
@@ -143,12 +143,12 @@ private fun GlowBackground() {
                 .blur(100.dp)
                 .background(
                     Brush.radialGradient(
-                        colors = listOf(GlowPurple, Color.Transparent)
+                        colors = listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.24f), Color.Transparent)
                     ),
                     shape = CircleShape
                 )
         )
-        // Right pink glow
+        // Right accent glow
         Box(
             modifier = Modifier
                 .size(220.dp)
@@ -157,7 +157,7 @@ private fun GlowBackground() {
                 .blur(90.dp)
                 .background(
                     Brush.radialGradient(
-                        colors = listOf(GlowPink, Color.Transparent)
+                        colors = listOf(MaterialTheme.colorScheme.secondary.copy(alpha = 0.24f), Color.Transparent)
                     ),
                     shape = CircleShape
                 )
@@ -168,7 +168,13 @@ private fun GlowBackground() {
 @Composable
 private fun PlayerHeader(onSettingsClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.16f),
+                shape = RoundedCornerShape(20.dp)
+            )
+            .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -176,27 +182,27 @@ private fun PlayerHeader(onSettingsClick: () -> Unit) {
             Text(
                 text = "Now Playing",
                 style = MaterialTheme.typography.displayLarge,
-                color = OnSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Mainkan musik favoritmu dengan gaya modern.",
                 style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Box(
             modifier = Modifier
                 .size(44.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(SurfaceCard.copy(alpha = 0.85f))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
                 .clickable(onClick = onSettingsClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Settings,
                 contentDescription = "Settings",
-                tint = PurpleAccent,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(22.dp)
             )
         }
@@ -225,8 +231,8 @@ private fun AlbumArtSection(song: Song?, isPlaying: Boolean) {
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            PurpleAccent.copy(alpha = 0.5f),
-                            PinkAccent.copy(alpha = 0.3f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
                             Color.Transparent
                         )
                     ),
@@ -240,7 +246,7 @@ private fun AlbumArtSection(song: Song?, isPlaying: Boolean) {
                 .size(260.dp)
                 .shadow(32.dp, RoundedCornerShape(28.dp))
                 .clip(RoundedCornerShape(28.dp))
-                .background(PurpleMid),
+                .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
         ) {
             if (song?.albumArtUri != null) {
@@ -257,7 +263,7 @@ private fun AlbumArtSection(song: Song?, isPlaying: Boolean) {
                         .fillMaxSize()
                         .background(
                             Brush.radialGradient(
-                                colors = listOf(PurpleMid, PurpleDark)
+                                colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.background)
                             )
                         ),
                     contentAlignment = Alignment.Center
@@ -265,7 +271,7 @@ private fun AlbumArtSection(song: Song?, isPlaying: Boolean) {
                     Icon(
                         imageVector = Icons.Default.MusicNote,
                         contentDescription = null,
-                        tint = PurpleAccent.copy(alpha = 0.4f),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
                         modifier = Modifier.size(80.dp)
                     )
                 }
@@ -290,7 +296,7 @@ private fun SongInfoSection(
             Text(
                 text = song?.title ?: "No song playing",
                 style = MaterialTheme.typography.headlineMedium,
-                color = OnSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -298,7 +304,7 @@ private fun SongInfoSection(
             Text(
                 text = if (song != null) "${song.artist} • ${song.album}" else "—",
                 style = MaterialTheme.typography.bodyMedium,
-                color = OnSurfaceMuted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -306,7 +312,7 @@ private fun SongInfoSection(
             Text(
                 text = if (song != null) "${currentIndex + 1} of $totalSongs" else "No queue",
                 style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -332,7 +338,7 @@ private fun SongInfoSection(
             Icon(
                 imageVector = if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                 contentDescription = "Favorite",
-                tint = if (isFav) HeartActive else OnSurfaceMuted,
+                tint = if (isFav) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -355,9 +361,9 @@ private fun ProgressSection(
             },
             modifier = Modifier.fillMaxWidth(),
             colors = SliderDefaults.colors(
-                thumbColor = PurpleLight,
-                activeTrackColor = PurpleLight,
-                inactiveTrackColor = SliderInactive
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
             )
         )
 
@@ -368,12 +374,12 @@ private fun ProgressSection(
             Text(
                 text = position.toFormattedTime(),
                 style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = duration.toFormattedTime(),
                 style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -398,7 +404,7 @@ private fun ControlsSection(
         // Shuffle
         ControlIconButton(
             icon = Icons.Default.Shuffle,
-            tint = if (shuffleEnabled) PurpleAccent else OnSurfaceMuted,
+            tint = if (shuffleEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             size = 26.dp,
             onClick = onShuffle
         )
@@ -406,7 +412,7 @@ private fun ControlsSection(
         // Skip previous
         ControlIconButton(
             icon = Icons.Default.SkipPrevious,
-            tint = IconTint,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             size = 32.dp,
             onClick = onSkipPrevious
         )
@@ -417,7 +423,7 @@ private fun ControlsSection(
         // Skip next
         ControlIconButton(
             icon = Icons.Default.SkipNext,
-            tint = IconTint,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             size = 32.dp,
             onClick = onSkipNext
         )
@@ -429,7 +435,7 @@ private fun ControlsSection(
         }
         ControlIconButton(
             icon = repeatIcon,
-            tint = if (repeatMode != Player.REPEAT_MODE_OFF) PurpleAccent else OnSurfaceMuted,
+            tint = if (repeatMode != Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             size = 26.dp,
             onClick = onRepeat
         )
@@ -446,7 +452,7 @@ private fun PlaybackStatusSection(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(SurfaceCard.copy(alpha = 0.7f))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -455,7 +461,7 @@ private fun PlaybackStatusSection(
             Icon(
                 imageVector = Icons.Default.Speed,
                 contentDescription = "Playback speed",
-                tint = PurpleAccent,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(22.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -463,12 +469,12 @@ private fun PlaybackStatusSection(
                 Text(
                     text = "Playback speed",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = OnSurface
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "${"%.1fx".format(playbackSpeed)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = OnSurfaceMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -477,7 +483,7 @@ private fun PlaybackStatusSection(
             Icon(
                 imageVector = Icons.Default.Timer,
                 contentDescription = "Sleep timer",
-                tint = PurpleAccent,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(22.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -485,12 +491,12 @@ private fun PlaybackStatusSection(
                 Text(
                     text = "Sleep timer",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = OnSurface
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = if (sleepTimerActive) "$sleepTimerMinutes min" else "Off",
                     style = MaterialTheme.typography.bodySmall,
-                    color = OnSurfaceMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -507,13 +513,13 @@ private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit) {
             .shadow(
                 elevation = 20.dp,
                 shape = CircleShape,
-                ambientColor = PurpleAccent.copy(alpha = 0.6f),
-                spotColor = PinkAccent.copy(alpha = 0.4f)
+                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                spotColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)
             )
             .clip(CircleShape)
             .background(
                 Brush.radialGradient(
-                    colors = listOf(PurpleLight, PurpleAccent)
+                    colors = listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.9f), MaterialTheme.colorScheme.secondary.copy(alpha = 0.85f))
                 )
             )
             .scale(scale.value)
@@ -525,7 +531,7 @@ private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit) {
         Icon(
             imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
             contentDescription = if (isPlaying) "Pause" else "Play",
-            tint = Color.White,
+            tint = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.size(34.dp)
         )
     }

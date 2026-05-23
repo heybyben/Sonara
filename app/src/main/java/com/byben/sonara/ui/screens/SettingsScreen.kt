@@ -19,13 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
-import com.byben.sonara.ui.theme.OnSurface
-import com.byben.sonara.ui.theme.OnSurfaceMuted
-import com.byben.sonara.ui.theme.PinkAccent
-import com.byben.sonara.ui.theme.PurpleDark
-import com.byben.sonara.ui.theme.PurpleDeep
-import com.byben.sonara.ui.theme.PurpleAccent
-import com.byben.sonara.ui.theme.SurfaceCard
 
 @Composable
 fun SettingsScreen(
@@ -47,7 +40,11 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(PurpleDeep, PurpleDark)
+                    colors = listOf(
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        MaterialTheme.colorScheme.surface
+                    )
                 )
             )
     ) {
@@ -59,13 +56,13 @@ fun SettingsScreen(
             Text(
                 text = "Settings",
                 style = MaterialTheme.typography.headlineSmall,
-                color = OnSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Sesuaikan pengalaman audio dan playback.",
                 style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -73,20 +70,20 @@ fun SettingsScreen(
             Surface(
                 tonalElevation = 4.dp,
                 shape = RoundedCornerShape(20.dp),
-                color = SurfaceCard.copy(alpha = 0.95f),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(
                         text = "Equalizer",
                         style = MaterialTheme.typography.titleMedium,
-                        color = OnSurface
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "Atur bass, mid, dan treble untuk suara yang lebih hidup.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = OnSurfaceMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(18.dp))
@@ -103,20 +100,20 @@ fun SettingsScreen(
             Surface(
                 tonalElevation = 4.dp,
                 shape = RoundedCornerShape(20.dp),
-                color = SurfaceCard.copy(alpha = 0.95f),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(
                         text = "Playback",
                         style = MaterialTheme.typography.titleMedium,
-                        color = OnSurface
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "Kontrol kecepatan pemutaran dan timer tidur.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = OnSurfaceMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(18.dp))
@@ -127,7 +124,7 @@ fun SettingsScreen(
                         Icon(
                             imageVector = Icons.Default.Speed,
                             contentDescription = null,
-                            tint = PurpleAccent,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -135,12 +132,12 @@ fun SettingsScreen(
                             Text(
                                 text = "Playback speed",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = OnSurface
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = "${"%.1fx".format(playbackSpeed)}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = OnSurfaceMuted
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -149,9 +146,9 @@ fun SettingsScreen(
                         onValueChange = onPlaybackSpeedChange,
                         valueRange = 0.75f..1.5f,
                         colors = androidx.compose.material3.SliderDefaults.colors(
-                            activeTrackColor = PurpleAccent,
-                            inactiveTrackColor = OnSurfaceMuted.copy(alpha = 0.25f),
-                            thumbColor = PinkAccent
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f),
+                            thumbColor = MaterialTheme.colorScheme.secondary
                         )
                     )
 
@@ -165,12 +162,12 @@ fun SettingsScreen(
                             Text(
                                 text = "Sleep timer",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = OnSurface
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = if (sleepTimerActive) "Berhenti dalam $sleepTimerMinutes menit" else "Mati setelah beberapa menit",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = OnSurfaceMuted
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         if (sleepTimerActive) {
@@ -197,20 +194,20 @@ fun SettingsScreen(
             Surface(
                 tonalElevation = 4.dp,
                 shape = RoundedCornerShape(20.dp),
-                color = SurfaceCard.copy(alpha = 0.95f),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(
                         text = "Audio output",
                         style = MaterialTheme.typography.titleMedium,
-                        color = OnSurface
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "Pilih kualitas playback untuk perangkatmu.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = OnSurfaceMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -230,7 +227,7 @@ fun SettingsScreen(
             Surface(
                 tonalElevation = 4.dp,
                 shape = RoundedCornerShape(20.dp),
-                color = SurfaceCard.copy(alpha = 0.95f),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -243,22 +240,22 @@ fun SettingsScreen(
                         Text(
                             text = "Mode gelap",
                             style = MaterialTheme.typography.titleMedium,
-                            color = OnSurface
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Aktifkan tampilan gelap untuk suasana musik malam.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = OnSurfaceMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Switch(
                         checked = isDarkMode,
                         onCheckedChange = { isDarkMode = it },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = PurpleAccent,
-                            uncheckedThumbColor = OnSurfaceMuted,
-                            checkedTrackColor = PinkAccent.copy(alpha = 0.35f)
+                            checkedThumbColor = MaterialTheme.colorScheme.primary,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            checkedTrackColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f)
                         )
                     )
                 }
@@ -269,7 +266,7 @@ fun SettingsScreen(
             Text(
                 text = "Tentang Aplikasi",
                 style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceMuted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
@@ -277,7 +274,7 @@ fun SettingsScreen(
             Text(
                 text = "Sonara Player • Versi 1.0 • Musik keren setiap hari",
                 style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceMuted.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
@@ -313,13 +310,13 @@ private fun EqualizerSlider(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = OnSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
             Text(
                 text = "${(value * 100).toInt()}%",
                 style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Slider(
@@ -327,9 +324,9 @@ private fun EqualizerSlider(
             onValueChange = onValueChange,
             valueRange = 0f..1f,
             colors = androidx.compose.material3.SliderDefaults.colors(
-                activeTrackColor = PurpleAccent,
-                inactiveTrackColor = OnSurfaceMuted.copy(alpha = 0.25f),
-                thumbColor = PinkAccent
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f),
+                thumbColor = MaterialTheme.colorScheme.secondary
             )
         )
     }
