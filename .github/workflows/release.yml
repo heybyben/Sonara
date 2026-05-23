@@ -1,0 +1,179 @@
+name: Release Sonara APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag name (contoh: v1.0.0)'
+        required: true
+      release_name:
+        description: 'Release title'
+        required: false
+      draft:
+        description: 'Create as draft release'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    env:
+      RELEASE_KEYSTORE_FILE: release.keystore
+      RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+      RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+      RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          tags: true
+
+      - name: Decode release keystore
+        run: |
+          if [ -z "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "Missing RELEASE_KEYSTORE_BASE64 secret. Cannot sign release APK."
+            exit 1
+          fi
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$RELEASE_KEYSTORE_FILE"
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Determine release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAG=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create or push tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git rev-parse -q --verify "refs/tags/${{ steps.tag.outputs.TAG }}" >/dev/null; then
+            echo "Tag ${{ steps.tag.outputs.TAG }} already exists, skipping creation."
+          else
+            git tag -a "${{ steps.tag.outputs.TAG }}" -m "Release ${{ steps.tag.outputs.TAG }}"
+            git push origin "${{ steps.tag.outputs.TAG }}"
+          fi
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Generate changelog from commits
+        id: changelog
+        run: |
+          git fetch --tags --prune
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            base=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+          else
+            base=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+          fi
+          if [ -n "$base" ]; then
+            log=$(git log --pretty=format:'- %s' "$base"..HEAD --no-merges)
+          else
+            log=$(git log --pretty=format:'- %s' HEAD --no-merges)
+          fi
+          if [ -z "$log" ]; then
+            log="- Tidak ada perubahan baru yang tercatat."
+          fi
+          echo "RELEASE_BODY=$log" >> $GITHUB_OUTPUT
+
+      - name: Upload release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sonara-release
+          path: app/build/outputs/apk/release/**/*.apk
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: ${{ github.event.inputs.release_name != '' && github.event.inputs.release_name || format('Release %s', steps.tag.outputs.TAG) }}
+          body: ${{ steps.changelog.outputs.RELEASE_BODY }}
+          draft: ${{ github.event.inputs.draft }}
+          files: app/build/outputs/apk/release/**/*.apk
+
+      - name: Send Telegram notification
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RESULT: ${{ job.status }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured. Skipping notification."
+            exit 0
+          fi
+
+          status="${RESULT^^}"
+          message="<b>Sonara Release</b>%0AStatus: ${status}%0ARepo: $GITHUB_REPOSITORY%0ARef: $GITHUB_REF%0ARun: $GITHUB_RUN_NUMBER%0AURL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${message}" \
+            -d parse_mode=HTML
+
+      - name: Upload release APKs to Telegram
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RESULT: ${{ job.status }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured. Skipping artifact upload."
+            exit 0
+          fi
+
+          ARTIFACT_DIR="app/build/outputs/apk/release"
+          shopt -s nullglob
+          files=("${ARTIFACT_DIR}"/*.apk)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No release APKs found in $ARTIFACT_DIR. Skipping upload."
+            exit 0
+          fi
+
+          caption_base="<b>Sonara Release</b>%0AStatus: ${RESULT^^}%0ARepo: $GITHUB_REPOSITORY%0ARef: $GITHUB_REF%0ARun: $GITHUB_RUN_NUMBER"
+          for apk in "${files[@]}"; do
+            echo "Uploading APK: $apk"
+            caption="$(basename "$apk")%0A${caption_base}"
+            curl --silent --show-error --fail -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+              -F chat_id="${TELEGRAM_CHAT_ID}" \
+              -F document=@"${apk}" \
+              -F caption="${caption}" \
+              -F parse_mode=HTML
+          done
