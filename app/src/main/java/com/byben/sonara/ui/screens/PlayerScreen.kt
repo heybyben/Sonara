@@ -1,0 +1,454 @@
+package com.byben.sonara.ui.screens
+
+import android.net.Uri
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.media3.common.Player
+import coil.compose.AsyncImage
+import com.byben.sonara.data.model.Song
+import com.byben.sonara.data.model.toFormattedTime
+import com.byben.sonara.ui.theme.*
+import com.byben.sonara.viewmodel.PlayerState
+
+@Composable
+fun PlayerScreen(
+    state: PlayerState,
+    onPlayPause: () -> Unit,
+    onSkipNext: () -> Unit,
+    onSkipPrevious: () -> Unit,
+    onSeek: (Long) -> Unit,
+    onShuffle: () -> Unit,
+    onRepeat: () -> Unit,
+    onFavorite: (Song) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        PurpleDeep,
+                        PurpleDark,
+                        SurfaceDark
+                    )
+                )
+            )
+    ) {
+        // Background glow blobs
+        GlowBackground()
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(52.dp))
+
+            // Top bar
+            TopBar()
+
+            Spacer(modifier = Modifier.height(36.dp))
+
+            // Album art
+            AlbumArtSection(
+                song = state.currentSong,
+                isPlaying = state.isPlaying
+            )
+
+            Spacer(modifier = Modifier.height(36.dp))
+
+            // Song info + favorite
+            SongInfoSection(
+                song = state.currentSong,
+                onFavorite = { state.currentSong?.let { onFavorite(it) } }
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Progress bar
+            ProgressSection(
+                position = state.currentPosition,
+                duration = state.duration,
+                onSeek = onSeek
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Controls
+            ControlsSection(
+                isPlaying = state.isPlaying,
+                shuffleEnabled = state.shuffleEnabled,
+                repeatMode = state.repeatMode,
+                onPlayPause = onPlayPause,
+                onSkipNext = onSkipNext,
+                onSkipPrevious = onSkipPrevious,
+                onShuffle = onShuffle,
+                onRepeat = onRepeat
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun GlowBackground() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Top left purple glow
+        Box(
+            modifier = Modifier
+                .size(280.dp)
+                .offset(x = (-60).dp, y = 80.dp)
+                .blur(100.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(GlowPurple, Color.Transparent)
+                    ),
+                    shape = CircleShape
+                )
+        )
+        // Right pink glow
+        Box(
+            modifier = Modifier
+                .size(220.dp)
+                .align(Alignment.TopEnd)
+                .offset(x = 40.dp, y = 120.dp)
+                .blur(90.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(GlowPink, Color.Transparent)
+                    ),
+                    shape = CircleShape
+                )
+        )
+    }
+}
+
+@Composable
+private fun TopBar() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowDown,
+            contentDescription = "Minimize",
+            tint = IconTint,
+            modifier = Modifier.size(28.dp)
+        )
+        Text(
+            text = "Now Playing",
+            style = MaterialTheme.typography.labelLarge.copy(
+                letterSpacing = 1.5.sp,
+                color = OnSurfaceMuted
+            )
+        )
+        Icon(
+            imageVector = Icons.Default.MoreVert,
+            contentDescription = "More options",
+            tint = IconTint,
+            modifier = Modifier.size(28.dp)
+        )
+    }
+}
+
+@Composable
+private fun AlbumArtSection(song: Song?, isPlaying: Boolean) {
+    val scale by animateFloatAsState(
+        targetValue = if (isPlaying) 1f else 0.92f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "albumScale"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(280.dp)
+            .scale(scale),
+        contentAlignment = Alignment.Center
+    ) {
+        // Shadow/glow behind album art
+        Box(
+            modifier = Modifier
+                .size(250.dp)
+                .blur(40.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            PurpleAccent.copy(alpha = 0.5f),
+                            PinkAccent.copy(alpha = 0.3f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = RoundedCornerShape(28.dp)
+                )
+        )
+
+        // Album art card
+        Box(
+            modifier = Modifier
+                .size(260.dp)
+                .shadow(32.dp, RoundedCornerShape(28.dp))
+                .clip(RoundedCornerShape(28.dp))
+                .background(PurpleMid),
+            contentAlignment = Alignment.Center
+        ) {
+            if (song?.albumArtUri != null) {
+                AsyncImage(
+                    model = Uri.parse(song.albumArtUri),
+                    contentDescription = song.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                // Placeholder with gradient and music icon
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(PurpleMid, PurpleDark)
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MusicNote,
+                        contentDescription = null,
+                        tint = PurpleAccent.copy(alpha = 0.4f),
+                        modifier = Modifier.size(80.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SongInfoSection(song: Song?, onFavorite: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = song?.title ?: "No song playing",
+                style = MaterialTheme.typography.headlineMedium,
+                color = OnSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = if (song != null) "${song.artist} • ${song.album}" else "—",
+                style = MaterialTheme.typography.bodyMedium,
+                color = OnSurfaceMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        // Favorite button with bounce animation
+        val heartScale = remember { Animatable(1f) }
+        val isFav = song?.isFavorite == true
+
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .scale(heartScale.value)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = {
+                            onFavorite()
+                        }
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = "Favorite",
+                tint = if (isFav) HeartActive else OnSurfaceMuted,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProgressSection(
+    position: Long,
+    duration: Long,
+    onSeek: (Long) -> Unit
+) {
+    val progress = if (duration > 0) position.toFloat() / duration.toFloat() else 0f
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Slider(
+            value = progress,
+            onValueChange = { ratio ->
+                if (duration > 0) onSeek((ratio * duration).toLong())
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = SliderDefaults.colors(
+                thumbColor = PurpleLight,
+                activeTrackColor = PurpleLight,
+                inactiveTrackColor = SliderInactive
+            )
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = position.toFormattedTime(),
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceMuted
+            )
+            Text(
+                text = duration.toFormattedTime(),
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceMuted
+            )
+        }
+    }
+}
+
+@Composable
+private fun ControlsSection(
+    isPlaying: Boolean,
+    shuffleEnabled: Boolean,
+    repeatMode: Int,
+    onPlayPause: () -> Unit,
+    onSkipNext: () -> Unit,
+    onSkipPrevious: () -> Unit,
+    onShuffle: () -> Unit,
+    onRepeat: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Shuffle
+        ControlIconButton(
+            icon = Icons.Default.Shuffle,
+            tint = if (shuffleEnabled) PurpleAccent else OnSurfaceMuted,
+            size = 26.dp,
+            onClick = onShuffle
+        )
+
+        // Skip previous
+        ControlIconButton(
+            icon = Icons.Default.SkipPrevious,
+            tint = IconTint,
+            size = 32.dp,
+            onClick = onSkipPrevious
+        )
+
+        // Play / Pause — big center button
+        PlayPauseButton(isPlaying = isPlaying, onClick = onPlayPause)
+
+        // Skip next
+        ControlIconButton(
+            icon = Icons.Default.SkipNext,
+            tint = IconTint,
+            size = 32.dp,
+            onClick = onSkipNext
+        )
+
+        // Repeat
+        val repeatIcon = when (repeatMode) {
+            Player.REPEAT_MODE_ONE -> Icons.Default.RepeatOne
+            else -> Icons.Default.Repeat
+        }
+        ControlIconButton(
+            icon = repeatIcon,
+            tint = if (repeatMode != Player.REPEAT_MODE_OFF) PurpleAccent else OnSurfaceMuted,
+            size = 26.dp,
+            onClick = onRepeat
+        )
+    }
+}
+
+@Composable
+private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit) {
+    val scale = remember { Animatable(1f) }
+
+    Box(
+        modifier = Modifier
+            .size(68.dp)
+            .shadow(
+                elevation = 20.dp,
+                shape = CircleShape,
+                ambientColor = PurpleAccent.copy(alpha = 0.6f),
+                spotColor = PinkAccent.copy(alpha = 0.4f)
+            )
+            .clip(CircleShape)
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(PurpleLight, PurpleAccent)
+                )
+            )
+            .scale(scale.value)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { onClick() })
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+            contentDescription = if (isPlaying) "Pause" else "Play",
+            tint = Color.White,
+            modifier = Modifier.size(34.dp)
+        )
+    }
+}
+
+@Composable
+private fun ControlIconButton(
+    icon: ImageVector,
+    tint: Color,
+    size: Dp,
+    onClick: () -> Unit
+) {
+    IconButton(onClick = onClick) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(size)
+        )
+    }
+}
