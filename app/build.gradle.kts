@@ -8,6 +8,26 @@ android {
     namespace = "com.byben.sonara"
     compileSdk = 35
 
+    val releaseKeystoreFile = file(System.getenv("RELEASE_KEYSTORE_FILE") ?: "release.keystore")
+    val releaseStorePassword = System.getenv("RELEASE_STORE_PASSWORD")?.takeIf { it.isNotBlank() }
+        ?: project.findProperty("RELEASE_STORE_PASSWORD")?.toString()
+    val releaseKeyAlias = System.getenv("RELEASE_KEY_ALIAS")?.takeIf { it.isNotBlank() }
+        ?: project.findProperty("RELEASE_KEY_ALIAS")?.toString()
+    val releaseKeyPassword = System.getenv("RELEASE_KEY_PASSWORD")?.takeIf { it.isNotBlank() }
+        ?: project.findProperty("RELEASE_KEY_PASSWORD")?.toString()
+
+    val isReleaseSigningConfigured =
+        System.getenv("RELEASE_KEYSTORE_FILE") != null || releaseKeystoreFile.exists()
+
+    signingConfigs {
+        create("release") {
+            storeFile = releaseKeystoreFile
+            storePassword = releaseStorePassword ?: ""
+            keyAlias = releaseKeyAlias ?: ""
+            keyPassword = releaseKeyPassword ?: ""
+        }
+    }
+
     defaultConfig {
         applicationId = "com.byben.sonara"
         minSdk = 26
@@ -25,6 +45,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (isReleaseSigningConfigured) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {

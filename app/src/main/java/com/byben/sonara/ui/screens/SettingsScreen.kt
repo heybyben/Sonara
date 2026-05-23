@@ -3,6 +3,11 @@ package com.byben.sonara.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Slider
@@ -23,7 +28,15 @@ import com.byben.sonara.ui.theme.PurpleAccent
 import com.byben.sonara.ui.theme.SurfaceCard
 
 @Composable
-fun SettingsScreen(modifier: Modifier = Modifier) {
+fun SettingsScreen(
+    playbackSpeed: Float,
+    sleepTimerMinutes: Int,
+    sleepTimerActive: Boolean,
+    onPlaybackSpeedChange: (Float) -> Unit,
+    onSetSleepTimer: (Int) -> Unit,
+    onCancelSleepTimer: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     var isDarkMode by remember { mutableStateOf(true) }
     var bass by remember { mutableStateOf(0.45f) }
     var mid by remember { mutableStateOf(0.55f) }
@@ -50,7 +63,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Sesuaikan pengalaman musikmu dengan cepat.",
+                text = "Sesuaikan pengalaman audio dan playback.",
                 style = MaterialTheme.typography.bodySmall,
                 color = OnSurfaceMuted
             )
@@ -82,6 +95,133 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                     EqualizerSlider(label = "Mid", value = mid, onValueChange = { mid = it })
                     Spacer(modifier = Modifier.height(12.dp))
                     EqualizerSlider(label = "Treble", value = treble, onValueChange = { treble = it })
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Surface(
+                tonalElevation = 4.dp,
+                shape = RoundedCornerShape(20.dp),
+                color = SurfaceCard.copy(alpha = 0.95f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text(
+                        text = "Playback",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = OnSurface
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Kontrol kecepatan pemutaran dan timer tidur.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OnSurfaceMuted
+                    )
+
+                    Spacer(modifier = Modifier.height(18.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Speed,
+                            contentDescription = null,
+                            tint = PurpleAccent,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Playback speed",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = OnSurface
+                            )
+                            Text(
+                                text = "${"%.1fx".format(playbackSpeed)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = OnSurfaceMuted
+                            )
+                        }
+                    }
+                    Slider(
+                        value = playbackSpeed,
+                        onValueChange = onPlaybackSpeedChange,
+                        valueRange = 0.75f..1.5f,
+                        colors = androidx.compose.material3.SliderDefaults.colors(
+                            activeTrackColor = PurpleAccent,
+                            inactiveTrackColor = OnSurfaceMuted.copy(alpha = 0.25f),
+                            thumbColor = PinkAccent
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(18.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "Sleep timer",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = OnSurface
+                            )
+                            Text(
+                                text = if (sleepTimerActive) "Berhenti dalam $sleepTimerMinutes menit" else "Mati setelah beberapa menit",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = OnSurfaceMuted
+                            )
+                        }
+                        if (sleepTimerActive) {
+                            Button(onClick = onCancelSleepTimer) {
+                                Text(text = "Batal")
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        SmallTimerButton("5m") { onSetSleepTimer(5) }
+                        SmallTimerButton("10m") { onSetSleepTimer(10) }
+                        SmallTimerButton("15m") { onSetSleepTimer(15) }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Surface(
+                tonalElevation = 4.dp,
+                shape = RoundedCornerShape(20.dp),
+                color = SurfaceCard.copy(alpha = 0.95f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text(
+                        text = "Audio output",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = OnSurface
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Pilih kualitas playback untuk perangkatmu.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OnSurfaceMuted
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        SmallTimerButton("Auto") { }
+                        SmallTimerButton("High") { }
+                        SmallTimerButton("Balanced") { }
+                    }
                 }
             }
 
@@ -145,6 +285,15 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+private fun SmallTimerButton(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.weight(1f)
+    ) {
+        Text(text = text)
+    }
+}
 
 @Composable
 private fun EqualizerSlider(

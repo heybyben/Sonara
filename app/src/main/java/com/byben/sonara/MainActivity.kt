@@ -110,6 +110,12 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                     .systemBarsPadding()
             )
             2 -> SettingsScreen(
+                playbackSpeed = state.playbackSpeed,
+                sleepTimerMinutes = state.sleepTimerMinutes,
+                sleepTimerActive = state.sleepTimerActive,
+                onPlaybackSpeedChange = viewModel::setPlaybackSpeed,
+                onSetSleepTimer = viewModel::setSleepTimer,
+                onCancelSleepTimer = viewModel::cancelSleepTimer,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)

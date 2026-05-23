@@ -75,8 +75,8 @@ fun PlayerScreen(
         ) {
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Top bar
-            TopBar(onSettingsClick = onSettingsClick)
+            // Top header
+            PlayerHeader(onSettingsClick = onSettingsClick)
 
             Spacer(modifier = Modifier.height(36.dp))
 
@@ -91,7 +91,17 @@ fun PlayerScreen(
             // Song info + favorite
             SongInfoSection(
                 song = state.currentSong,
+                currentIndex = state.currentIndex,
+                totalSongs = state.songs.size,
                 onFavorite = { state.currentSong?.let { onFavorite(it) } }
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            PlaybackStatusSection(
+                playbackSpeed = state.playbackSpeed,
+                sleepTimerMinutes = state.sleepTimerMinutes,
+                sleepTimerActive = state.sleepTimerActive
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -156,35 +166,25 @@ private fun GlowBackground() {
 }
 
 @Composable
-private fun TopBar(onSettingsClick: () -> Unit) {
+private fun PlayerHeader(onSettingsClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowDown,
-                contentDescription = "Minimize",
-                tint = IconTint,
-                modifier = Modifier.size(28.dp)
+        Column {
+            Text(
+                text = "Now Playing",
+                style = MaterialTheme.typography.displayLarge,
+                color = OnSurface
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = "Now Playing",
-                    style = MaterialTheme.typography.displayLarge,
-                    color = OnSurface
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Rasakan musik terbaikmu sekarang.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = OnSurfaceMuted
-                )
-            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Mainkan musik favoritmu dengan gaya modern.",
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceMuted
+            )
         }
-
         Box(
             modifier = Modifier
                 .size(44.dp)
@@ -275,7 +275,12 @@ private fun AlbumArtSection(song: Song?, isPlaying: Boolean) {
 }
 
 @Composable
-private fun SongInfoSection(song: Song?, onFavorite: () -> Unit) {
+private fun SongInfoSection(
+    song: Song?,
+    currentIndex: Int,
+    totalSongs: Int,
+    onFavorite: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -296,6 +301,12 @@ private fun SongInfoSection(song: Song?, onFavorite: () -> Unit) {
                 color = OnSurfaceMuted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = if (song != null) "${currentIndex + 1} of $totalSongs" else "No queue",
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceMuted
             )
         }
 
@@ -422,6 +433,67 @@ private fun ControlsSection(
             size = 26.dp,
             onClick = onRepeat
         )
+    }
+}
+
+@Composable
+private fun PlaybackStatusSection(
+    playbackSpeed: Float,
+    sleepTimerMinutes: Int,
+    sleepTimerActive: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(SurfaceCard.copy(alpha = 0.7f))
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.Speed,
+                contentDescription = "Playback speed",
+                tint = PurpleAccent,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = "Playback speed",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnSurface
+                )
+                Text(
+                    text = "${"%.1fx".format(playbackSpeed)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = OnSurfaceMuted
+                )
+            }
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.Timer,
+                contentDescription = "Sleep timer",
+                tint = PurpleAccent,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = "Sleep timer",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnSurface
+                )
+                Text(
+                    text = if (sleepTimerActive) "$sleepTimerMinutes min" else "Off",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = OnSurfaceMuted
+                )
+            }
+        }
     }
 }
 

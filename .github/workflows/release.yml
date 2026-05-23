@@ -5,14 +5,48 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag name (contoh: v1.0.0)'
+        required: true
+      release_name:
+        description: 'Release title'
+        required: false
+      draft:
+        description: 'Create as draft release'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+  packages: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
 
+    env:
+      RELEASE_KEYSTORE_FILE: release.keystore
+      RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+      RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+      RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          tags: true
+
+      - name: Decode release keystore
+        run: |
+          if [ -z "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "Missing RELEASE_KEYSTORE_BASE64 secret. Cannot sign release APK."
+            exit 1
+          fi
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$RELEASE_KEYSTORE_FILE"
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -34,8 +68,48 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Determine release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAG=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create or push tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git rev-parse -q --verify "refs/tags/${{ steps.tag.outputs.TAG }}" >/dev/null; then
+            echo "Tag ${{ steps.tag.outputs.TAG }} already exists, skipping creation."
+          else
+            git tag -a "${{ steps.tag.outputs.TAG }}" -m "Release ${{ steps.tag.outputs.TAG }}"
+            git push origin "${{ steps.tag.outputs.TAG }}"
+          fi
+
       - name: Build release APK
         run: ./gradlew assembleRelease --stacktrace
+
+      - name: Generate changelog from commits
+        id: changelog
+        run: |
+          git fetch --tags --prune
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            base=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+          else
+            base=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+          fi
+          if [ -n "$base" ]; then
+            log=$(git log --pretty=format:'- %s' "$base"..HEAD --no-merges)
+          else
+            log=$(git log --pretty=format:'- %s' HEAD --no-merges)
+          fi
+          if [ -z "$log" ]; then
+            log="- Tidak ada perubahan baru yang tercatat."
+          fi
+          echo "RELEASE_BODY=$log" >> $GITHUB_OUTPUT
 
       - name: Upload release APK artifact
         uses: actions/upload-artifact@v4
@@ -46,9 +120,12 @@ jobs:
           if-no-files-found: error
 
       - name: Create GitHub release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: ${{ github.event.inputs.release_name != '' && github.event.inputs.release_name || format('Release %s', steps.tag.outputs.TAG) }}
+          body: ${{ steps.changelog.outputs.RELEASE_BODY }}
+          draft: ${{ github.event.inputs.draft }}
           files: app/build/outputs/apk/release/**/*.apk
 
       - name: Send Telegram notification

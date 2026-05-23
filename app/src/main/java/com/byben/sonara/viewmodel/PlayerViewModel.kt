@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -15,6 +16,7 @@ import com.byben.sonara.data.repository.MusicRepository
 import com.byben.sonara.player.SonaraPlaybackService
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +30,9 @@ data class PlayerState(
     val duration: Long = 0L,
     val shuffleEnabled: Boolean = false,
     val repeatMode: Int = Player.REPEAT_MODE_OFF, // 0=off, 1=one, 2=all
+    val playbackSpeed: Float = 1f,
+    val sleepTimerMinutes: Int = 0,
+    val sleepTimerActive: Boolean = false,
     val songs: List<Song> = emptyList(),
     val currentIndex: Int = 0
 )
@@ -37,6 +42,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val repository = MusicRepository(application)
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
+    private var sleepTimerJob: Job? = null
 
     private val _state = MutableStateFlow(PlayerState())
     val state: StateFlow<PlayerState> = _state.asStateFlow()
@@ -181,6 +187,36 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
         ctrl.repeatMode = newMode
         _state.value = _state.value.copy(repeatMode = newMode)
+    }
+
+    fun setPlaybackSpeed(speed: Float) {
+        val ctrl = controller ?: return
+        ctrl.playbackParameters = PlaybackParameters(speed)
+        _state.value = _state.value.copy(playbackSpeed = speed)
+    }
+
+    fun setSleepTimer(minutes: Int) {
+        sleepTimerJob?.cancel()
+        if (minutes <= 0) {
+            _state.value = _state.value.copy(sleepTimerMinutes = 0, sleepTimerActive = false)
+            return
+        }
+
+        _state.value = _state.value.copy(
+            sleepTimerMinutes = minutes,
+            sleepTimerActive = true
+        )
+
+        sleepTimerJob = viewModelScope.launch {
+            delay(minutes * 60_000L)
+            controller?.pause()
+            _state.value = _state.value.copy(isPlaying = false, sleepTimerActive = false)
+        }
+    }
+
+    fun cancelSleepTimer() {
+        sleepTimerJob?.cancel()
+        _state.value = _state.value.copy(sleepTimerMinutes = 0, sleepTimerActive = false)
     }
 
     fun toggleFavorite(song: Song) {
