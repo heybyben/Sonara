@@ -146,3 +146,33 @@ jobs:
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d text="${message}" \
             -d parse_mode=HTML
+
+      - name: Upload release APKs to Telegram
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RESULT: ${{ job.status }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured. Skipping artifact upload."
+            exit 0
+          fi
+
+          ARTIFACT_DIR="app/build/outputs/apk/release"
+          shopt -s nullglob
+          files=("${ARTIFACT_DIR}"/*.apk)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No release APKs found in $ARTIFACT_DIR. Skipping upload."
+            exit 0
+          fi
+
+          ZIP_NAME="sonara-release-${GITHUB_RUN_NUMBER}.zip"
+          zip -j "$ZIP_NAME" "${files[@]}"
+
+          caption="<b>Sonara Release</b>%0AStatus: ${RESULT^^}%0ARepo: $GITHUB_REPOSITORY%0ARef: $GITHUB_REF%0ARun: $GITHUB_RUN_NUMBER"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+            -F chat_id="${TELEGRAM_CHAT_ID}" \
+            -F document=@"${ZIP_NAME}" \
+            -F caption="${caption}" \
+            -F parse_mode=HTML

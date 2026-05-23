@@ -6,29 +6,22 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.byben.sonara.ui.screens.LibraryScreen
 import com.byben.sonara.ui.screens.PlayerScreen
-import com.byben.sonara.ui.screens.SettingsScreen
-import com.byben.sonara.ui.theme.*
+import com.byben.sonara.ui.theme.SonaraTheme
 import com.byben.sonara.viewmodel.PlayerViewModel
 
 class MainActivity : ComponentActivity() {
@@ -43,7 +36,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge() // Draws behind status bar & nav bar
+        enableEdgeToEdge()
         requestAudioPermission()
 
         setContent {
@@ -73,30 +66,18 @@ fun SonaraApp(viewModel: PlayerViewModel) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = PurpleDark,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            BottomNavBar(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
-            )
+            BottomNavBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
         }
     ) { innerPadding ->
-        // innerPadding sudah include status bar + nav bar dari Scaffold
         when (selectedTab) {
             0 -> PlayerScreen(
                 state = state,
                 onPlayPause = viewModel::togglePlayPause,
-                onSkipNext = viewModel::skipNext,
-                onSkipPrevious = viewModel::skipPrevious,
-                onSeek = viewModel::seekTo,
-                onShuffle = viewModel::toggleShuffle,
-                onRepeat = viewModel::toggleRepeat,
-                onFavorite = viewModel::toggleFavorite,
-                onSettingsClick = { selectedTab = 2 },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .systemBarsPadding()
             )
             1 -> LibraryScreen(
                 state = state,
@@ -107,19 +88,6 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .systemBarsPadding()
-            )
-            2 -> SettingsScreen(
-                playbackSpeed = state.playbackSpeed,
-                sleepTimerMinutes = state.sleepTimerMinutes,
-                sleepTimerActive = state.sleepTimerActive,
-                onPlaybackSpeedChange = viewModel::setPlaybackSpeed,
-                onSetSleepTimer = viewModel::setSleepTimer,
-                onCancelSleepTimer = viewModel::cancelSleepTimer,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .systemBarsPadding()
             )
         }
     }
@@ -132,10 +100,8 @@ fun BottomNavBar(
     onTabSelected: (Int) -> Unit
 ) {
     NavigationBar(
-        containerColor = SurfaceCard.copy(alpha = 0.97f),
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier.fillMaxWidth()
     ) {
         NavigationBarItem(
             selected = selectedTab == 0,
@@ -143,17 +109,16 @@ fun BottomNavBar(
             icon = {
                 Icon(
                     imageVector = Icons.Default.GraphicEq,
-                    contentDescription = "Player",
-                    modifier = Modifier.size(24.dp)
+                    contentDescription = "Player"
                 )
             },
-            label = { Text("Player", fontSize = 11.sp) },
+            label = { Text("Player") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = PurpleAccent,
-                selectedTextColor = PurpleAccent,
-                unselectedIconColor = OnSurfaceMuted,
-                unselectedTextColor = OnSurfaceMuted,
-                indicatorColor = PurpleMid
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
             )
         )
         NavigationBarItem(
@@ -162,36 +127,16 @@ fun BottomNavBar(
             icon = {
                 Icon(
                     imageVector = Icons.Default.LibraryMusic,
-                    contentDescription = "Library",
-                    modifier = Modifier.size(24.dp)
+                    contentDescription = "Library"
                 )
             },
-            label = { Text("Library", fontSize = 11.sp) },
+            label = { Text("Library") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = PurpleAccent,
-                selectedTextColor = PurpleAccent,
-                unselectedIconColor = OnSurfaceMuted,
-                unselectedTextColor = OnSurfaceMuted,
-                indicatorColor = PurpleMid
-            )
-        )
-        NavigationBarItem(
-            selected = selectedTab == 2,
-            onClick = { onTabSelected(2) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            label = { Text("Settings", fontSize = 11.sp) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = PurpleAccent,
-                selectedTextColor = PurpleAccent,
-                unselectedIconColor = OnSurfaceMuted,
-                unselectedTextColor = OnSurfaceMuted,
-                indicatorColor = PurpleMid
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
             )
         )
     }
