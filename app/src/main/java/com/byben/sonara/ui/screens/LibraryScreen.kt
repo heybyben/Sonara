@@ -29,7 +29,6 @@ import com.byben.sonara.viewmodel.PlayerState
 fun LibraryScreen(
     state: PlayerState,
     onSongClick: (Song, Int) -> Unit,
-    onMiniPlayerClick: () -> Unit = {},
     bottomPadding: Dp = 16.dp,
     modifier: Modifier = Modifier
 ) {

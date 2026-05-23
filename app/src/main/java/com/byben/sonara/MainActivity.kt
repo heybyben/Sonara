@@ -13,9 +13,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -68,52 +73,67 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SonaraApp(viewModel: PlayerViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var selectedTab by remember { mutableStateOf(1) }
+    var selectedTab by remember { mutableStateOf(2) }
+    var showPlayer by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            BottomNavBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
+            BottomNavBar(selectedTab = selectedTab, onTabSelected = {
+                selectedTab = it
+                showPlayer = false
+            })
         }
     ) { innerPadding ->
-        when (selectedTab) {
-            0 -> PlayerScreen(
+        val currentSong = state.currentSong
+
+        if (showPlayer && currentSong != null) {
+            PlayerScreen(
                 state = state,
+                onPrevious = viewModel::playPrevious,
                 onPlayPause = viewModel::togglePlayPause,
+                onNext = viewModel::playNext,
+                onToggleShuffle = viewModel::toggleShuffle,
+                onToggleRepeat = viewModel::toggleRepeat,
+                onClose = { showPlayer = false },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             )
-            1 -> {
-                val currentSong = state.currentSong
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                ) {
-                    LibraryScreen(
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                when (selectedTab) {
+                    0 -> HomeScreen(modifier = Modifier.fillMaxSize())
+                    1 -> SearchScreen(modifier = Modifier.fillMaxSize())
+                    2 -> LibraryScreen(
                         state = state,
                         onSongClick = { song, index ->
                             viewModel.playSong(song, index)
-                            selectedTab = 0
+                            showPlayer = true
                         },
-                        onMiniPlayerClick = { selectedTab = 0 },
                         bottomPadding = if (currentSong != null) 112.dp else 16.dp,
                         modifier = Modifier.fillMaxSize()
                     )
+                    3 -> SettingsScreen(modifier = Modifier.fillMaxSize())
+                }
 
                     if (currentSong != null) {
-                        MiniPlayerOverlay(
-                            song = currentSong,
-                            isPlaying = state.isPlaying,
-                            onPlayPause = viewModel::togglePlayPause,
-                            onOpenPlayer = { selectedTab = 0 },
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
-                    }
+                    MiniPlayerOverlay(
+                        song = currentSong,
+                        isPlaying = state.isPlaying,
+                        onPrevious = viewModel::playPrevious,
+                        onPlayPause = viewModel::togglePlayPause,
+                        onNext = viewModel::playNext,
+                        onOpenPlayer = { showPlayer = true },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
                 }
             }
         }
@@ -121,49 +141,126 @@ fun SonaraApp(viewModel: PlayerViewModel) {
 }
 
 @Composable
+fun HomeScreen(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Home",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+fun SearchScreen(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Search",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+fun SettingsScreen(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Settings",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
 fun MiniPlayerOverlay(
     song: Song,
     isPlaying: Boolean,
+    onPrevious: () -> Unit,
     onPlayPause: () -> Unit,
+    onNext: () -> Unit,
     onOpenPlayer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 84.dp),
+            .heightIn(min = 100.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onOpenPlayer)
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = song.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = song.artist,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
+        Column(modifier = Modifier.clickable(onClick = onOpenPlayer)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = song.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = song.artist,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+                IconButton(onClick = onPlayPause) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlaying) "Pause" else "Play"
+                    )
+                }
             }
-            IconButton(onClick = onPlayPause) {
-                Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play"
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onPrevious) {
+                    Icon(
+                        imageVector = Icons.Default.SkipPrevious,
+                        contentDescription = "Previous"
+                    )
+                }
+                IconButton(onClick = onPlayPause) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlaying) "Pause" else "Play"
+                    )
+                }
+                IconButton(onClick = onNext) {
+                    Icon(
+                        imageVector = Icons.Default.SkipNext,
+                        contentDescription = "Next"
+                    )
+                }
             }
         }
     }
@@ -184,11 +281,11 @@ fun BottomNavBar(
             onClick = { onTabSelected(0) },
             icon = {
                 Icon(
-                    imageVector = Icons.Default.GraphicEq,
-                    contentDescription = "Player"
+                    imageVector = Icons.Default.Home,
+                    contentDescription = "Home"
                 )
             },
-            label = { Text("Player") },
+            label = { Text("Home") },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -202,11 +299,47 @@ fun BottomNavBar(
             onClick = { onTabSelected(1) },
             icon = {
                 Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search"
+                )
+            },
+            label = { Text("Search") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+            )
+        )
+        NavigationBarItem(
+            selected = selectedTab == 2,
+            onClick = { onTabSelected(2) },
+            icon = {
+                Icon(
                     imageVector = Icons.Default.LibraryMusic,
                     contentDescription = "Library"
                 )
             },
             label = { Text("Library") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+            )
+        )
+        NavigationBarItem(
+            selected = selectedTab == 3,
+            onClick = { onTabSelected(3) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings"
+                )
+            },
+            label = { Text("Settings") },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,

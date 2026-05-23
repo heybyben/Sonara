@@ -21,13 +21,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+enum class RepeatMode {
+    OFF,
+    ONE,
+    ALL
+}
+
 data class PlayerState(
     val currentSong: Song? = null,
     val isPlaying: Boolean = false,
     val currentPosition: Long = 0L,
     val duration: Long = 0L,
     val songs: List<Song> = emptyList(),
-    val currentIndex: Int = 0
+    val currentIndex: Int = 0,
+    val isShuffleEnabled: Boolean = false,
+    val repeatMode: RepeatMode = RepeatMode.OFF
 )
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
@@ -54,6 +62,38 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun refreshSongs() {
         loadSongs()
+    }
+
+    fun playPrevious() {
+        controller?.seekToPreviousMediaItem()
+    }
+
+    fun playNext() {
+        controller?.seekToNextMediaItem()
+    }
+
+    fun toggleShuffle() {
+        controller?.let { ctrl ->
+            val enabled = !(ctrl.shuffleModeEnabled ?: false)
+            ctrl.setShuffleModeEnabled(enabled)
+            _state.value = _state.value.copy(isShuffleEnabled = enabled)
+        }
+    }
+
+    fun toggleRepeat() {
+        val nextMode = when (_state.value.repeatMode) {
+            RepeatMode.OFF -> RepeatMode.ALL
+            RepeatMode.ALL -> RepeatMode.ONE
+            RepeatMode.ONE -> RepeatMode.OFF
+        }
+        controller?.setRepeatMode(
+            when (nextMode) {
+                RepeatMode.OFF -> Player.REPEAT_MODE_OFF
+                RepeatMode.ALL -> Player.REPEAT_MODE_ALL
+                RepeatMode.ONE -> Player.REPEAT_MODE_ONE
+            }
+        )
+        _state.value = _state.value.copy(repeatMode = nextMode)
     }
 
     private fun connectToService() {
