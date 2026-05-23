@@ -185,9 +185,9 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        SmallTimerButton("5m") { onSetSleepTimer(5) }
-                        SmallTimerButton("10m") { onSetSleepTimer(10) }
-                        SmallTimerButton("15m") { onSetSleepTimer(15) }
+                        SmallTimerButton("5m", modifier = Modifier.weight(1f)) { onSetSleepTimer(5) }
+                        SmallTimerButton("10m", modifier = Modifier.weight(1f)) { onSetSleepTimer(10) }
+                        SmallTimerButton("15m", modifier = Modifier.weight(1f)) { onSetSleepTimer(15) }
                     }
                 }
             }
@@ -286,10 +286,14 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SmallTimerButton(text: String, onClick: () -> Unit) {
+private fun SmallTimerButton(
+    text: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     Button(
         onClick = onClick,
-        modifier = Modifier.weight(1f)
+        modifier = modifier
     ) {
         Text(text = text)
     }
