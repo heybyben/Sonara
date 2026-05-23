@@ -22,18 +22,15 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SettingsScreen(
-    playbackSpeed: Float,
-    sleepTimerMinutes: Int,
-    sleepTimerActive: Boolean,
-    onPlaybackSpeedChange: (Float) -> Unit,
-    onSetSleepTimer: (Int) -> Unit,
-    onCancelSleepTimer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isDarkMode by remember { mutableStateOf(true) }
     var bass by remember { mutableStateOf(0.45f) }
     var mid by remember { mutableStateOf(0.55f) }
     var treble by remember { mutableStateOf(0.4f) }
+    var playbackSpeed by remember { mutableStateOf(1.0f) }
+    var sleepTimerMinutes by remember { mutableStateOf(0) }
+    var sleepTimerActive by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -143,60 +140,62 @@ fun SettingsScreen(
                     }
                     Slider(
                         value = playbackSpeed,
-                        onValueChange = onPlaybackSpeedChange,
-                        valueRange = 0.75f..1.5f,
-                        colors = androidx.compose.material3.SliderDefaults.colors(
-                            activeTrackColor = MaterialTheme.colorScheme.primary,
-                            inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f),
-                            thumbColor = MaterialTheme.colorScheme.secondary
-                        )
+                    onValueChange = { playbackSpeed = it },
+                    valueRange = 0.75f..1.5f,
+                    colors = androidx.compose.material3.SliderDefaults.colors(
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f),
+                        thumbColor = MaterialTheme.colorScheme.secondary
                     )
+                )
 
-                    Spacer(modifier = Modifier.height(18.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(
-                                text = "Sleep timer",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = if (sleepTimerActive) "Berhenti dalam $sleepTimerMinutes menit" else "Mati setelah beberapa menit",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        if (sleepTimerActive) {
-                            Button(onClick = onCancelSleepTimer) {
-                                Text(text = "Batal")
-                            }
+                Spacer(modifier = Modifier.height(18.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = "Sleep timer",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (sleepTimerActive) "Berhenti dalam $sleepTimerMinutes menit" else "Mati setelah beberapa menit",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (sleepTimerActive) {
+                        Button(onClick = {
+                            sleepTimerActive = false
+                            sleepTimerMinutes = 0
+                        }) {
+                            Text(text = "Batal")
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        SmallTimerButton("5m", modifier = Modifier.weight(1f)) { onSetSleepTimer(5) }
-                        SmallTimerButton("10m", modifier = Modifier.weight(1f)) { onSetSleepTimer(10) }
-                        SmallTimerButton("15m", modifier = Modifier.weight(1f)) { onSetSleepTimer(15) }
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    SmallTimerButton("5m", modifier = Modifier.weight(1f)) {
+                        sleepTimerMinutes = 5
+                        sleepTimerActive = true
+                    }
+                    SmallTimerButton("10m", modifier = Modifier.weight(1f)) {
+                        sleepTimerMinutes = 10
+                        sleepTimerActive = true
+                    }
+                    SmallTimerButton("15m", modifier = Modifier.weight(1f)) {
+                        sleepTimerMinutes = 15
+                        sleepTimerActive = true
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            Surface(
-                tonalElevation = 4.dp,
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
-                modifier = Modifier.fillMaxWidth()
-            ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(
                         text = "Audio output",

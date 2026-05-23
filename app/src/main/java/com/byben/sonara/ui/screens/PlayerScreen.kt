@@ -156,7 +156,7 @@ fun PlayerScreen(
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
+                        horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(onClick = onPrevious, enabled = state.currentSong != null) {
@@ -165,18 +165,18 @@ fun PlayerScreen(
                                 contentDescription = "Previous"
                             )
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
                         IconButton(
                             onClick = onPlayPause,
-                            enabled = state.currentSong != null
+                            enabled = state.currentSong != null,
+                            modifier = Modifier.size(72.dp)
                         ) {
                             Icon(
                                 imageVector = if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                                 contentDescription = if (state.isPlaying) "Pause" else "Play",
-                                tint = MaterialTheme.colorScheme.onPrimary
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(36.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
                         IconButton(onClick = onNext, enabled = state.currentSong != null) {
                             Icon(
                                 imageVector = Icons.Default.SkipNext,
@@ -184,7 +184,7 @@ fun PlayerScreen(
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
