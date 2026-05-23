@@ -3,14 +3,8 @@ package com.byben.sonara.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Equalizer
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -19,10 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.byben.sonara.ui.theme.OnSurface
 import com.byben.sonara.ui.theme.OnSurfaceMuted
 import com.byben.sonara.ui.theme.PinkAccent
@@ -57,57 +48,70 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.headlineSmall,
                 color = OnSurface
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Atur pengalaman musik dan lihat informasi aplikasi.",
-                style = MaterialTheme.typography.bodyMedium,
+                text = "Sesuaikan pengalaman musikmu dengan cepat.",
+                style = MaterialTheme.typography.bodySmall,
                 color = OnSurfaceMuted
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            SettingsCard(
-                icon = Icons.Default.Info,
-                title = "Tentang Aplikasi",
-                subtitle = "Sonara Player • Versi 1.0 • Musik keren setiap hari"
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            SettingsCard(
-                icon = Icons.Default.Equalizer,
-                title = "Equalizer",
-                subtitle = "Atur bass, mid, dan treble untuk suara yang lebih hidup"
+            Surface(
+                tonalElevation = 4.dp,
+                shape = RoundedCornerShape(20.dp),
+                color = SurfaceCard.copy(alpha = 0.95f),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                EqualizerControls(
-                    bass = bass,
-                    mid = mid,
-                    treble = treble,
-                    onBassChange = { bass = it },
-                    onMidChange = { mid = it },
-                    onTrebleChange = { treble = it }
-                )
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text(
+                        text = "Equalizer",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = OnSurface
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Atur bass, mid, dan treble untuk suara yang lebih hidup.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OnSurfaceMuted
+                    )
+
+                    Spacer(modifier = Modifier.height(18.dp))
+                    EqualizerSlider(label = "Bass", value = bass, onValueChange = { bass = it })
+                    Spacer(modifier = Modifier.height(12.dp))
+                    EqualizerSlider(label = "Mid", value = mid, onValueChange = { mid = it })
+                    Spacer(modifier = Modifier.height(12.dp))
+                    EqualizerSlider(label = "Treble", value = treble, onValueChange = { treble = it })
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            SettingsCard(
-                icon = Icons.Default.Settings,
-                title = "Tampilan dan Tema",
-                subtitle = "Mode gelap otomatis dan gaya antarmuka"
+            Surface(
+                tonalElevation = 4.dp,
+                shape = RoundedCornerShape(20.dp),
+                color = SurfaceCard.copy(alpha = 0.95f),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(18.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Mode gelap",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = OnSurface,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Mode gelap",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = OnSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Aktifkan tampilan gelap untuk suasana musik malam.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = OnSurfaceMuted
+                        )
+                    }
                     Switch(
                         checked = isDarkMode,
                         onCheckedChange = { isDarkMode = it },
@@ -119,70 +123,28 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Text(
+                text = "Tentang Aplikasi",
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceMuted,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Sonara Player • Versi 1.0 • Musik keren setiap hari",
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceMuted.copy(alpha = 0.8f),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
         }
     }
 }
 
-@Composable
-private fun SettingsCard(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    content: @Composable (() -> Unit)? = null
-) {
-    OutlinedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp)
-    ) {
-        Column(modifier = Modifier.padding(18.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = PurpleAccent,
-                    modifier = Modifier.size(26.dp)
-                )
-                Spacer(modifier = Modifier.width(14.dp))
-                Column {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = OnSurface
-                    )
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = OnSurfaceMuted
-                    )
-                }
-            }
-            if (content != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Divider(color = OnSurfaceMuted.copy(alpha = 0.12f))
-                Spacer(modifier = Modifier.height(12.dp))
-                content()
-            }
-        }
-    }
-}
-
-@Composable
-private fun EqualizerControls(
-    bass: Float,
-    mid: Float,
-    treble: Float,
-    onBassChange: (Float) -> Unit,
-    onMidChange: (Float) -> Unit,
-    onTrebleChange: (Float) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        EqualizerSlider(label = "Bass", value = bass, onValueChange = onBassChange)
-        Spacer(modifier = Modifier.height(12.dp))
-        EqualizerSlider(label = "Mid", value = mid, onValueChange = onMidChange)
-        Spacer(modifier = Modifier.height(12.dp))
-        EqualizerSlider(label = "Treble", value = treble, onValueChange = onTrebleChange)
-    }
-}
 
 @Composable
 private fun EqualizerSlider(

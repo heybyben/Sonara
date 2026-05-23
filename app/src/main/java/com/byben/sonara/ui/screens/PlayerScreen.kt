@@ -158,37 +158,48 @@ private fun GlowBackground() {
 @Composable
 private fun TopBar(onSettingsClick: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                color = SurfaceCard.copy(alpha = 0.12f),
-                shape = RoundedCornerShape(24.dp)
-            )
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = Icons.Default.KeyboardArrowDown,
-            contentDescription = "Minimize",
-            tint = IconTint,
-            modifier = Modifier.size(28.dp)
-        )
-        Text(
-            text = "Now Playing",
-            style = MaterialTheme.typography.labelLarge.copy(
-                letterSpacing = 1.5.sp,
-                color = OnSurfaceMuted
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = "Minimize",
+                tint = IconTint,
+                modifier = Modifier.size(28.dp)
             )
-        )
-        Icon(
-            imageVector = Icons.Default.Settings,
-            contentDescription = "Settings",
-            tint = IconTint,
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = "Now Playing",
+                    style = MaterialTheme.typography.displayLarge,
+                    color = OnSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Rasakan musik terbaikmu sekarang.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnSurfaceMuted
+                )
+            }
+        }
+
+        Box(
             modifier = Modifier
-                .size(28.dp)
-                .clickable(onClick = onSettingsClick)
-        )
+                .size(44.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(SurfaceCard.copy(alpha = 0.85f))
+                .clickable(onClick = onSettingsClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Settings",
+                tint = PurpleAccent,
+                modifier = Modifier.size(22.dp)
+            )
+        }
     }
 }
 
