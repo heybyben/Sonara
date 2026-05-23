@@ -168,11 +168,19 @@ jobs:
           fi
 
           ZIP_NAME="sonara-release-${GITHUB_RUN_NUMBER}.zip"
-          zip -j "$ZIP_NAME" "${files[@]}"
+          ZIP_PATH="${PWD}/${ZIP_NAME}"
+          zip -j "$ZIP_PATH" "${files[@]}"
+          if [ ! -f "$ZIP_PATH" ]; then
+            echo "Zip creation failed: $ZIP_PATH not found"
+            exit 1
+          fi
 
+          echo "Created ZIP: $ZIP_PATH"
+          ls -l "$ZIP_PATH"
+          echo "Uploading $ZIP_PATH to Telegram"
           caption="<b>Sonara Release</b>%0AStatus: ${RESULT^^}%0ARepo: $GITHUB_REPOSITORY%0ARef: $GITHUB_REF%0ARun: $GITHUB_RUN_NUMBER"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+          curl --silent --show-error --fail -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
             -F chat_id="${TELEGRAM_CHAT_ID}" \
-            -F document=@"${ZIP_NAME}" \
+            -F document=@"${ZIP_PATH}" \
             -F caption="${caption}" \
             -F parse_mode=HTML
