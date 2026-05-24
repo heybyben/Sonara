@@ -12,9 +12,15 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Pause
@@ -28,17 +34,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.byben.sonara.data.model.Song
+import com.byben.sonara.data.model.toFormattedTime
 import com.byben.sonara.ui.screens.LibraryScreen
 import com.byben.sonara.ui.screens.PlayerScreen
 import com.byben.sonara.ui.screens.SettingsScreen
 import com.byben.sonara.ui.theme.SonaraTheme
+import com.byben.sonara.viewmodel.PlayerState
 import com.byben.sonara.viewmodel.PlayerViewModel
 
 class MainActivity : ComponentActivity() {
@@ -79,7 +86,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SonaraApp(viewModel: PlayerViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var selectedTab by remember { mutableStateOf(2) }
+    var selectedTab by remember { mutableStateOf(0) }
     var showPlayer by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -114,7 +121,15 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                     .padding(innerPadding)
             ) {
                 when (selectedTab) {
-                    0 -> HomeScreen(modifier = Modifier.fillMaxSize())
+                    0 -> HomeScreen(
+                        state = state,
+                        onSongClick = { song, index ->
+                            viewModel.playSong(song, index)
+                            showPlayer = true
+                        },
+                        bottomPadding = if (currentSong != null) 112.dp else 16.dp,
+                        modifier = Modifier.fillMaxSize()
+                    )
                     1 -> SearchScreen(modifier = Modifier.fillMaxSize())
                     2 -> LibraryScreen(
                         state = state,
@@ -147,18 +162,133 @@ fun SonaraApp(viewModel: PlayerViewModel) {
 }
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
-    Box(
+fun HomeScreen(
+    state: PlayerState,
+    onSongClick: (Song, Int) -> Unit,
+    bottomPadding: Dp = 16.dp,
+    modifier: Modifier = Modifier
+) {
+    val recentSongs = state.songs.take(10)
+
+    Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surface
+                    )
+                )
+            )
     ) {
-        Text(
-            text = "Home",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Column(modifier = Modifier.padding(24.dp)) {
+            Text(
+                text = "Home",
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Recently played",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        if (recentSongs.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No recent play history yet. Start playing a song from Library.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.padding(24.dp)
+                )
+            }
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    top = 8.dp,
+                    end = 16.dp,
+                    bottom = bottomPadding
+                ),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                itemsIndexed(recentSongs) { index, song ->
+                    ElevatedCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onSongClick(song, index)
+                            },
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (song.albumArtUri != null) {
+                                    AsyncImage(
+                                        model = Uri.parse(song.albumArtUri),
+                                        contentDescription = song.title,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.MusicNote,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = song.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = song.artist,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Text(
+                                text = song.duration.toFormattedTime(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
