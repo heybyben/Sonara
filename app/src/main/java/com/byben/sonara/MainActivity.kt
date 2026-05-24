@@ -261,27 +261,26 @@ fun MiniPlayerOverlay(
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 88.dp),
-        shape = RoundedCornerShape(24.dp),
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f, fill = false)
                     .clickable(onClick = onOpenPlayer)
-                    .padding(12.dp),
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Album Art
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(16.dp))
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.secondaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
@@ -296,49 +295,65 @@ fun MiniPlayerOverlay(
                         Icon(
                             imageVector = Icons.Default.MusicNote,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
+                // Title + Artist
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = song.title,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = song.artist,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                IconButton(onClick = onPlayPause) {
+                // Controls
+                IconButton(
+                    onClick = onPlayPause,
+                    modifier = Modifier.size(40.dp)
+                ) {
                     Icon(
                         imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) "Pause" else "Play"
+                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
-                IconButton(onClick = onNext) {
+                IconButton(
+                    onClick = onNext,
+                    modifier = Modifier.size(40.dp)
+                ) {
                     Icon(
                         imageVector = Icons.Default.SkipNext,
-                        contentDescription = "Next"
+                        contentDescription = "Next",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
+            // Progress bar at bottom
             LinearProgressIndicator(
                 progress = { progress },
-                modifier = Modifier.fillMaxWidth().height(3.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(2.dp),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = Color.Transparent
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
         }
     }
@@ -350,81 +365,37 @@ fun BottomNavBar(
     modifier: Modifier = Modifier,
     onTabSelected: (Int) -> Unit
 ) {
+    val items = listOf(
+        Triple(Icons.Default.Home, "Home", 0),
+        Triple(Icons.Default.Search, "Search", 1),
+        Triple(Icons.Default.LibraryMusic, "Library", 2),
+        Triple(Icons.Default.Settings, "Settings", 3)
+    )
+
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         modifier = modifier.fillMaxWidth()
     ) {
-        NavigationBarItem(
-            selected = selectedTab == 0,
-            onClick = { onTabSelected(0) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Home"
+        items.forEach { (icon, label, index) ->
+            val selected = selectedTab == index
+            NavigationBarItem(
+                selected = selected,
+                onClick = { onTabSelected(index) },
+                icon = {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        modifier = Modifier.size(26.dp)
+                    )
+                },
+                label = null,
+                alwaysShowLabel = false,
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer
                 )
-            },
-            label = { Text("Home") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
             )
-        )
-        NavigationBarItem(
-            selected = selectedTab == 1,
-            onClick = { onTabSelected(1) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search"
-                )
-            },
-            label = { Text("Search") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-            )
-        )
-        NavigationBarItem(
-            selected = selectedTab == 2,
-            onClick = { onTabSelected(2) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.LibraryMusic,
-                    contentDescription = "Library"
-                )
-            },
-            label = { Text("Library") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-            )
-        )
-        NavigationBarItem(
-            selected = selectedTab == 3,
-            onClick = { onTabSelected(3) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings"
-                )
-            },
-            label = { Text("Settings") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-            )
-        )
+        }
     }
 }
