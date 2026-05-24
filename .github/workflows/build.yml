@@ -57,25 +57,11 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Create debug ZIP artifact
-        run: |
-          set -euo pipefail
-          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
-          ZIP_NAME="sonara-debug-${GITHUB_RUN_NUMBER}.zip"
-          if [ ! -f "$APK_PATH" ]; then
-            echo "No debug APK found at $APK_PATH"
-            exit 1
-          fi
-          zip -j "$ZIP_NAME" "$APK_PATH"
-          ls -l "$ZIP_NAME"
-        env:
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
-
-      - name: Upload debug ZIP artifact
+      - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: Sonara-debug
-          path: sonara-debug-${{ github.run_number }}.zip
+          path: app/build/outputs/apk/debug/app-debug.apk
           compression-level: 0
           if-no-files-found: error
 
@@ -117,20 +103,10 @@ jobs:
             exit 0
           fi
 
-          ZIP_NAME="sonara-debug-${GITHUB_RUN_NUMBER}.zip"
-          ZIP_PATH="${PWD}/${ZIP_NAME}"
-          zip -j "$ZIP_PATH" "$APK_PATH"
-          if [ ! -f "$ZIP_PATH" ]; then
-            echo "Zip creation failed: $ZIP_PATH not found"
-            exit 1
-          fi
-
-          echo "Created ZIP: $ZIP_PATH"
-          ls -l "$ZIP_PATH"
-          echo "Uploading $ZIP_PATH to Telegram"
-          caption="<b>Sonara Debug CI</b>%0AStatus: ${RESULT^^}%0ARepo: $GITHUB_REPOSITORY%0ARef: $GITHUB_REF%0ARun: $GITHUB_RUN_NUMBER"
+          echo "Uploading APK: $APK_PATH"
+          caption="app-debug.apk%0A<b>Sonara Debug CI</b>%0AStatus: ${RESULT^^}%0ARepo: $GITHUB_REPOSITORY%0ARef: $GITHUB_REF%0ARun: $GITHUB_RUN_NUMBER"
           curl --silent --show-error --fail -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
             -F chat_id="${TELEGRAM_CHAT_ID}" \
-            -F document=@"${ZIP_PATH}" \
+            -F document=@"${APK_PATH}" \
             -F caption="${caption}" \
             -F parse_mode=HTML
