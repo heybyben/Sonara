@@ -80,7 +80,7 @@ private val SonaraLightColorScheme = lightColorScheme(
 
 @Composable
 fun SonaraTheme(
-    dynamicColor: Boolean = false,
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
