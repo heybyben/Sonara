@@ -72,6 +72,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         controller?.seekToNextMediaItem()
     }
 
+    fun seekTo(position: Long) {
+        controller?.seekTo(position)
+    }
+
     fun toggleShuffle() {
         controller?.let { ctrl ->
             val enabled = !(ctrl.shuffleModeEnabled ?: false)

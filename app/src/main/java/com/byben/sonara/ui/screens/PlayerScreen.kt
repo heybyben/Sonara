@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -38,6 +39,7 @@ fun PlayerScreen(
     onNext: () -> Unit,
     onToggleShuffle: () -> Unit,
     onToggleRepeat: () -> Unit,
+    onSeekTo: (Long) -> Unit,
     onClose: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -60,7 +62,7 @@ fun PlayerScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -68,26 +70,13 @@ fun PlayerScreen(
             ) {
                 IconButton(onClick = onClose) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Close player"
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Minimize player",
+                        modifier = Modifier.size(32.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Now Playing",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = state.currentSong?.artist ?: "Select a song from Library",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             Box(
                 modifier = Modifier
                     .size(280.dp)
@@ -136,13 +125,13 @@ fun PlayerScreen(
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = state.currentSong?.album ?: "Library first",
+                text = state.currentSong?.artist ?: "Library first",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.weight(1f))
             ElevatedCard(
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.fillMaxWidth(),
@@ -154,6 +143,47 @@ fun PlayerScreen(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    if (state.currentSong != null) {
+                        Slider(
+                            value = if (state.duration > 0) state.currentPosition.toFloat() / state.duration else 0f,
+                            onValueChange = {
+                                val newPos = (it * state.duration).toLong()
+                                onSeekTo(newPos)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colorScheme.primary,
+                                activeTrackColor = MaterialTheme.colorScheme.primary,
+                                inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                            )
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = state.currentPosition.toFormattedTime(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = state.duration.toFormattedTime(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    } else {
+                        Text(
+                            text = "Ready to play when a song is selected",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -166,28 +196,44 @@ fun PlayerScreen(
                                 tint = if (state.isShuffleEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        IconButton(onClick = onPrevious, enabled = state.currentSong != null) {
+                        IconButton(
+                            onClick = onPrevious, 
+                            enabled = state.currentSong != null,
+                            modifier = Modifier.size(56.dp)
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.SkipPrevious,
-                                contentDescription = "Previous"
+                                contentDescription = "Previous",
+                                modifier = Modifier.size(36.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
-                        IconButton(
+                        FilledIconButton(
                             onClick = onPlayPause,
                             enabled = state.currentSong != null,
-                            modifier = Modifier.size(72.dp)
+                            modifier = Modifier.size(72.dp),
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
                         ) {
                             Icon(
                                 imageVector = if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                                 contentDescription = if (state.isPlaying) "Pause" else "Play",
-                                tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(36.dp)
                             )
                         }
-                        IconButton(onClick = onNext, enabled = state.currentSong != null) {
+                        IconButton(
+                            onClick = onNext, 
+                            enabled = state.currentSong != null,
+                            modifier = Modifier.size(56.dp)
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.SkipNext,
-                                contentDescription = "Next"
+                                contentDescription = "Next",
+                                modifier = Modifier.size(36.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                         IconButton(onClick = onToggleRepeat, enabled = state.currentSong != null) {
@@ -198,18 +244,6 @@ fun PlayerScreen(
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = if (state.currentSong != null) {
-                            "${state.currentPosition.toFormattedTime()} / ${state.duration.toFormattedTime()}"
-                        } else {
-                            "Ready to play when a song is selected"
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
             }
         }

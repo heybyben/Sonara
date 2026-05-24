@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -109,6 +110,7 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                 onNext = viewModel::playNext,
                 onToggleShuffle = viewModel::toggleShuffle,
                 onToggleRepeat = viewModel::toggleRepeat,
+                onSeekTo = viewModel::seekTo,
                 onClose = { showPlayer = false },
                 modifier = Modifier
                     .fillMaxSize()
@@ -125,7 +127,6 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                         state = state,
                         onSongClick = { song, index ->
                             viewModel.playSong(song, index)
-                            showPlayer = true
                         },
                         bottomPadding = if (currentSong != null) 112.dp else 16.dp,
                         modifier = Modifier.fillMaxSize()
@@ -135,7 +136,6 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                         state = state,
                         onSongClick = { song, index ->
                             viewModel.playSong(song, index)
-                            showPlayer = true
                         },
                         bottomPadding = if (currentSong != null) 112.dp else 16.dp,
                         modifier = Modifier.fillMaxSize()
@@ -147,6 +147,7 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                     MiniPlayerOverlay(
                         song = currentSong,
                         isPlaying = state.isPlaying,
+                        progress = if (state.duration > 0) state.currentPosition.toFloat() / state.duration else 0f,
                         onPrevious = viewModel::playPrevious,
                         onPlayPause = viewModel::togglePlayPause,
                         onNext = viewModel::playNext,
@@ -312,6 +313,7 @@ fun SearchScreen(modifier: Modifier = Modifier) {
 fun MiniPlayerOverlay(
     song: Song,
     isPlaying: Boolean,
+    progress: Float,
     onPrevious: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
@@ -327,68 +329,77 @@ fun MiniPlayerOverlay(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onOpenPlayer)
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .clickable(onClick = onOpenPlayer)
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (song.albumArtUri != null) {
-                    AsyncImage(
-                        model = Uri.parse(song.albumArtUri),
-                        contentDescription = song.title,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.secondaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (song.albumArtUri != null) {
+                        AsyncImage(
+                            model = Uri.parse(song.albumArtUri),
+                            contentDescription = song.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.MusicNote,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = song.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
                     )
-                } else {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = song.artist,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+
+                IconButton(onClick = onPlayPause) {
                     Icon(
-                        imageVector = Icons.Default.MusicNote,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlaying) "Pause" else "Play"
+                    )
+                }
+                IconButton(onClick = onNext) {
+                    Icon(
+                        imageVector = Icons.Default.SkipNext,
+                        contentDescription = "Next"
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = song.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = song.artist,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
-            }
-
-            IconButton(onClick = onPlayPause) {
-                Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play"
-                )
-            }
-            IconButton(onClick = onNext) {
-                Icon(
-                    imageVector = Icons.Default.SkipNext,
-                    contentDescription = "Next"
-                )
-            }
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(3.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = Color.Transparent
+            )
         }
     }
 }
