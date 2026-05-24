@@ -5,12 +5,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +27,7 @@ import com.byben.sonara.data.model.Song
 import com.byben.sonara.data.model.toFormattedTime
 import com.byben.sonara.viewmodel.PlayerState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     state: PlayerState,
@@ -32,6 +35,9 @@ fun LibraryScreen(
     bottomPadding: Dp = 16.dp,
     modifier: Modifier = Modifier
 ) {
+    var selectedTag by remember { mutableStateOf("Songs") }
+    val tags = listOf("Songs", "Albums", "Artists")
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -44,7 +50,7 @@ fun LibraryScreen(
                 )
             )
     ) {
-        Column(modifier = Modifier.padding(24.dp)) {
+        Column(modifier = Modifier.padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 12.dp)) {
             Text(
                 text = "Library",
                 style = MaterialTheme.typography.headlineLarge,
@@ -56,6 +62,23 @@ fun LibraryScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                tags.forEach { tag ->
+                    FilterChip(
+                        selected = selectedTag == tag,
+                        onClick = { selectedTag = tag },
+                        label = { Text(tag) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
+            }
         }
 
         if (state.songs.isEmpty()) {
@@ -75,14 +98,54 @@ fun LibraryScreen(
             LazyColumn(
                 contentPadding = PaddingValues(
                     start = 16.dp,
-                    top = 16.dp,
+                    top = 8.dp,
                     end = 16.dp,
                     bottom = bottomPadding
                 ),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                itemsIndexed(state.songs) { index, song ->
-                    SongItem(song, isCurrent = state.currentSong?.id == song.id, onClick = { onSongClick(song, index) })
+                when (selectedTag) {
+                    "Songs" -> {
+                        itemsIndexed(state.songs) { index, song ->
+                            SongItem(song, isCurrent = state.currentSong?.id == song.id, onClick = { onSongClick(song, index) })
+                        }
+                    }
+                    "Albums" -> {
+                        val albums = state.songs.groupBy { it.album }
+                        val albumNames = albums.keys.toList().sorted()
+                        items(albumNames) { albumName ->
+                            val albumSongs = albums[albumName] ?: emptyList()
+                            if (albumSongs.isNotEmpty()) {
+                                AlbumItem(
+                                    albumName = albumName,
+                                    artistName = albumSongs.first().artist,
+                                    songCount = albumSongs.size,
+                                    albumArtUri = albumSongs.first().albumArtUri
+                                ) {
+                                    val firstSong = albumSongs.first()
+                                    val index = state.songs.indexOf(firstSong)
+                                    if (index != -1) onSongClick(firstSong, index)
+                                }
+                            }
+                        }
+                    }
+                    "Artists" -> {
+                        val artists = state.songs.groupBy { it.artist }
+                        val artistNames = artists.keys.toList().sorted()
+                        items(artistNames) { artistName ->
+                            val artistSongs = artists[artistName] ?: emptyList()
+                            if (artistSongs.isNotEmpty()) {
+                                ArtistItem(
+                                    artistName = artistName,
+                                    songCount = artistSongs.size
+                                ) {
+                                    val firstSong = artistSongs.first()
+                                    val index = state.songs.indexOf(firstSong)
+                                    if (index != -1) onSongClick(firstSong, index)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -90,7 +153,7 @@ fun LibraryScreen(
 }
 
 @Composable
-private fun SongItem(song: Song, isCurrent: Boolean, onClick: () -> Unit) {
+fun SongItem(song: Song, isCurrent: Boolean, onClick: () -> Unit) {
     val background = if (isCurrent) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent
 
     Surface(
@@ -155,6 +218,119 @@ private fun SongItem(song: Song, isCurrent: Boolean, onClick: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+fun AlbumItem(albumName: String, artistName: String, songCount: Int, albumArtUri: String?, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.Transparent)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                if (albumArtUri != null) {
+                    AsyncImage(
+                        model = Uri.parse(albumArtUri),
+                        contentDescription = albumName,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.MusicNote,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = albumName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "$artistName • $songCount songs",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ArtistItem(artistName: String, songCount: Int, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.Transparent)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(26.dp))
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = artistName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "$songCount songs",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
