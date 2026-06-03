@@ -138,6 +138,7 @@ fun SonaraApp(viewModel: PlayerViewModel) {
                         onSongClick = { song, index ->
                             viewModel.playSong(song, index)
                         },
+                        onRefresh = viewModel::refreshSongs,
                         bottomPadding = if (currentSong != null) 112.dp else 16.dp,
                         modifier = Modifier.fillMaxSize()
                     )

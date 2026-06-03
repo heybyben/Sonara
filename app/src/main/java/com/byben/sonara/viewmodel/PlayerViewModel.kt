@@ -35,7 +35,8 @@ data class PlayerState(
     val songs: List<Song> = emptyList(),
     val currentIndex: Int = 0,
     val isShuffleEnabled: Boolean = false,
-    val repeatMode: RepeatMode = RepeatMode.OFF
+    val repeatMode: RepeatMode = RepeatMode.OFF,
+    val isRefreshing: Boolean = false
 )
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
@@ -61,7 +62,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun refreshSongs() {
-        loadSongs()
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isRefreshing = true)
+            try {
+                val songs = repository.getAllSongs()
+                _state.value = _state.value.copy(songs = songs, isRefreshing = false)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(isRefreshing = false)
+            }
+        }
     }
 
     fun playPrevious() {

@@ -11,11 +11,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -32,6 +34,7 @@ import com.byben.sonara.viewmodel.PlayerState
 fun LibraryScreen(
     state: PlayerState,
     onSongClick: (Song, Int) -> Unit,
+    onRefresh: () -> Unit = {},
     bottomPadding: Dp = 16.dp,
     modifier: Modifier = Modifier
 ) {
@@ -51,17 +54,45 @@ fun LibraryScreen(
             )
     ) {
         Column(modifier = Modifier.padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 12.dp)) {
-            Text(
-                text = "Library",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "${state.songs.size} songs available",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Library",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "${state.songs.size} songs available",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                IconButton(
+                    onClick = onRefresh,
+                    enabled = !state.isRefreshing,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Refresh folder",
+                        tint = if (state.isRefreshing) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .let {
+                                if (state.isRefreshing) {
+                                    it.rotate(360f)
+                                } else {
+                                    it
+                                }
+                            }
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
